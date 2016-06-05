@@ -11,16 +11,20 @@ public class Splitter {
     // Number of files saved so far (second half of output file names)
     private int numSaved = 0;
     // input stream of the file we're working with
-    private AudioInputStream input;
+    private AudioInputStream stream;
+    private AudioFormat format;
     private AudioFileFormat.Type fileType;
     // used to actually play the input stream for the user.
     private Clip player;
+    // Frame position on the audio stream where we last cut from.
+    private long lastSnipPos = 0;
 
     public Splitter(File inputAudio, String output) {
         outputName = output;
         try {
             fileType = AudioSystem.getAudioFileFormat(inputAudio).getType();
-            input = AudioSystem.getAudioInputStream(inputAudio);
+            stream = AudioSystem.getAudioInputStream(inputAudio);
+            format = stream.getFormat();
             // TODO check if mark supported?
         } catch (UnsupportedAudioFileException | IOException e) {
             // TODO Auto-generated catch block
@@ -34,13 +38,25 @@ public class Splitter {
      * the mark to the current position.
      */
     public void snip() {
+        // Calculate number of frames to snip
+        long length = player.getLongFramePosition() - lastSnipPos;
+
+        // Return to the last place we snipped from
+        try {
+            stream.reset();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        save(new AudioInputStream(stream, format, length));
     }
 
     /**
      * Saves numFrames frames from data to a new file with name based on
      * outputName and numSaved, starting from the most recent mark set on data.
      */
-    private void save(AudioInputStream data, long numFrames) {
+    private void save(AudioInputStream data) {
         File outputFile = new File(outputName + numSaved);
         try {
             AudioSystem.write(data, fileType, outputFile);
