@@ -1,10 +1,9 @@
 import java.io.File;
 import java.io.IOException;
-import java.util.Scanner;
 
 import javax.sound.sampled.*;
 
-public class Splitter {
+public class AudioSplitter {
 
     // Name that output files will start with, followed by the index of cuts
     private String outputName;
@@ -16,17 +15,25 @@ public class Splitter {
     private AudioFileFormat.Type fileType;
     // used to actually play the input stream for the user.
     private Clip player;
+    private int totalLength;
     // Frame position on the audio stream where we last cut from.
     private long lastSnipPos = 0;
 
-    public Splitter(File inputAudio, String output) {
+    public AudioSplitter(File inputAudio, String output) {
         outputName = output;
         try {
             fileType = AudioSystem.getAudioFileFormat(inputAudio).getType();
             stream = AudioSystem.getAudioInputStream(inputAudio);
+            if (!stream.markSupported()) {
+                throw new UnsupportedOperationException();
+            }
             format = stream.getFormat();
-            // TODO check if mark supported?
-        } catch (UnsupportedAudioFileException | IOException e) {
+            player = AudioSystem.getClip();
+            player.open(stream);
+            totalLength = player.getFrameLength();
+            stream.mark(totalLength);
+        } catch (UnsupportedAudioFileException | IOException
+                | LineUnavailableException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
@@ -50,6 +57,29 @@ public class Splitter {
         }
 
         save(new AudioInputStream(stream, format, length));
+
+        try {
+            stream.skip(length);
+            stream.mark(totalLength);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Begins playing audio. Does not block.
+     */
+    public void play() {
+        this.player.start();
+    }
+
+    /**
+     * Stops playing audio. If audio is resumed later, it will continue playing
+     * from this point.
+     */
+    public void pause() {
+        this.player.stop();
     }
 
     /**
@@ -66,40 +96,4 @@ public class Splitter {
         }
         numSaved++;
     }
-
-    public static void main(String[] args) {
-        if (args.length < 1) {
-            System.err.println("ERROR: No input file specified.");
-        }
-    }
-
-    /**
-     * Blocks until the user has pressed the enter key. If there is a console
-     * attached, supress all output to it except for enter key.
-     * 
-     * TODO this is just for development purposes. Eclipse's console doesn't
-     * actually register as a console, so we can't simply use
-     * System.console().readPassword() if we want to run it from within eclipse.
-     * In reality, we should print an error and quit if this program is being
-     * run without a console, since it simply doesn't make sense for the user to
-     * pipe input into this program.
-     * 
-     * @see https://bugs.eclipse.org/bugs/show_bug.cgi?id=122429
-     */
-    private static void waitForEnter() {
-        if (System.console() != null) {
-            // Don't actually care about the result, just wait for enter without
-            // printing keystrokes to console.
-            System.console().readPassword();
-        }
-        // "should never happen" (see note in javadoc above)
-        else {
-            Scanner s = new Scanner(System.in);
-            // Doesn't surpress console output, but at this point the user has
-            // other problems.
-            s.nextLine();
-            s.close();
-        }
-    }
-
 }
