@@ -1,3 +1,5 @@
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 public class SoundSplit {
@@ -5,15 +7,24 @@ public class SoundSplit {
     public static void main(String[] args) {
         if (args.length < 1) {
             System.err.println("ERROR: No input file specified.");
-            //TODO quit program
+            System.exit(1);
         }
-        AudioSplitter splitter = new AudioSplitter()
-        
+        File input = new File(args[0]);
+        String outputFormat = args[0] + "_";
+        AudioSplitter splitter = new AudioSplitter(input, outputFormat);
+
+        System.out.println("Playing audio");
+        splitter.play();
+        while (!splitter.isDonePlaying()) {
+            waitForEnter();
+            splitter.snip();
+            System.out.println("snip");
+        }
     }
 
     /**
      * Blocks until the user has pressed the enter key. If there is a console
-     * attached, supress all output to it except for enter key.
+     * attached, suppress all output to it except for enter key.
      * 
      * TODO this is just for development purposes. Eclipse's console doesn't
      * actually register as a console, so we can't simply use
