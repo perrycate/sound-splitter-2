@@ -9,8 +9,12 @@ public class SoundSplit {
             System.err.println("ERROR: No input file specified.");
             System.exit(1);
         }
+        if (args.length < 2) {
+            System.err.println("ERROR: No output file template specified.");
+            System.exit(1);
+        }
         File input = new File(args[0]);
-        String outputFormat = args[0] + "_";
+        String outputFormat = args[1] + "_";
         AudioSplitter splitter = new AudioSplitter(input, outputFormat);
 
         System.out.println("Playing audio");

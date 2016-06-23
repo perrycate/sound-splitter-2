@@ -6,7 +6,7 @@ import javax.sound.sampled.*;
 
 public class AudioSplitter {
 
-    // Name that output files will start with, followed by the index of cuts
+    // Name that output files will start with, to be followed by the index of cuts
     private String outputName;
     // Number of files saved so far (second half of output file names)
     private int numSaved = 0;
@@ -77,6 +77,22 @@ public class AudioSplitter {
     }
 
     /**
+     * Saves numFrames frames from data to a new file with name based on
+     * outputName and numSaved, starting from the most recent mark set on data.
+     */
+    private void save(AudioInputStream data) {
+        File outputFile = new File(
+                outputName + numSaved + "." + fileType.getExtension());
+        try {
+            AudioSystem.write(data, fileType, outputFile);
+        } catch (IOException e) {
+            System.err.println("ERROR: Unable to save file " + outputFile);
+            e.printStackTrace();
+        }
+        numSaved++;
+    }
+
+    /**
      * Begins playing audio. Does not block.
      */
     public void play() {
@@ -95,18 +111,4 @@ public class AudioSplitter {
         this.player.stop();
     }
 
-    /**
-     * Saves numFrames frames from data to a new file with name based on
-     * outputName and numSaved, starting from the most recent mark set on data.
-     */
-    private void save(AudioInputStream data) {
-        File outputFile = new File(outputName + numSaved);
-        try {
-            AudioSystem.write(data, fileType, outputFile);
-        } catch (IOException e) {
-            System.err.println("ERROR: Unable to save file " + outputFile);
-            e.printStackTrace();
-        }
-        numSaved++;
-    }
 }
