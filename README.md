@@ -11,4 +11,7 @@ albeit not well.
 After compiling, run with `java SoundSplit filename.wav outputname`,
 where `outputname` is the string that newly created files should start with.
 
-Currently SoundSplitter will only work with .wav files.
+Press Enter to snip the file.
+
+Currently SoundSplitter will only work with .wav files. To convert an mp3 to a .wav
+file, use `ffmpeg -i <mp3 file> <new filename>.wav
